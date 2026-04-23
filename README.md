@@ -1,3 +1,1 @@
-﻿
 # Operational Risk Event Collector
-
