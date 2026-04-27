@@ -45,6 +45,6 @@ public class RiskEvent {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+         this.updatedAt = LocalDateTime.now();
     }
 }
