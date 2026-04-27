@@ -1,6 +1,7 @@
 package com.internship.tool.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -11,9 +12,11 @@ import lombok.*;
 public class RiskEventRequest {
 
     @NotBlank(message = "Title is required")
+    @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private String title;
 
     @NotBlank(message = "Description is required")
+    @Size(min = 5, message = "Description must be at least 5 characters")
     private String description;
 
     @NotBlank(message = "Category is required")
