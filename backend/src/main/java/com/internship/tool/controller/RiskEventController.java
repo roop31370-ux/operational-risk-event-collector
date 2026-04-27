@@ -1,7 +1,10 @@
 package com.internship.tool.controller;
 
-import com.internship.tool.entity.RiskEvent;
+import com.internship.tool.dto.RiskEventRequest;
+import com.internship.tool.dto.RiskEventResponse;
 import com.internship.tool.service.RiskEventService;
+
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,15 +17,21 @@ public class RiskEventController {
     @Autowired
     private RiskEventService service;
 
-    // POST API → create event
+    // ✅ CREATE API
     @PostMapping
-    public RiskEvent create(@RequestBody RiskEvent event) {
-        return service.save(event);
+    public RiskEventResponse create(@Valid @RequestBody RiskEventRequest request) {
+        return service.createRiskEvent(request);
     }
 
-    // GET API → fetch all events
+    // ✅ GET ALL API
     @GetMapping
-    public List<RiskEvent> getAll() {
-        return service.getAll();
+    public List<RiskEventResponse> getAll() {
+        return service.getAllRiskEvents();
+    }
+
+    // ✅ GET BY ID API
+    @GetMapping("/{id}")
+    public RiskEventResponse getById(@PathVariable Long id) {
+        return service.getById(id);
     }
 }

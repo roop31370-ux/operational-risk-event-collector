@@ -7,10 +7,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "risk_events")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class RiskEvent {
 
     @Id
