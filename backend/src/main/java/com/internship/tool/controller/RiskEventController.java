@@ -33,56 +33,26 @@ public class RiskEventController {
         return service.getAllRiskEvents();
     }
 
-    // 🔥 PAGINATION
+    // 🔥 PAGINATION (basic)
     @GetMapping("/paged")
     public Page<RiskEventResponse> getAllPaged(Pageable pageable) {
         return service.getAllWithPagination(pageable);
     }
 
-    // 🔍 SEARCH
-    @GetMapping("/search")
-    public Page<RiskEventResponse> search(
-            @RequestParam String keyword,
-            Pageable pageable) {
-
-        return service.searchByTitle(keyword, pageable);
-    }
-
-    // 🔎 FILTER
-    @GetMapping("/filter")
-    public Page<RiskEventResponse> filter(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String severity,
-            @RequestParam(required = false) String status,
-            Pageable pageable) {
-
-        if (category != null && !category.isEmpty()) {
-            return service.getByCategory(category, pageable);
-        }
-
-        if (severity != null && !severity.isEmpty()) {
-            return service.getBySeverity(severity, pageable);
-        }
-
-        if (status != null && !status.isEmpty()) {
-            return service.getByStatus(status, pageable);
-        }
-
-        return service.getAllWithPagination(pageable);
-    }
-
-    // 🔥🔥 ADVANCED (VERY IMPORTANT — keep above {id})
+    // 🔥🔥 DAY 6 — ADVANCED (Single Powerful API)
     @GetMapping("/advanced")
     public Page<RiskEventResponse> advanced(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        return service.advancedSearch(keyword, category, page, size);
+        return service.advancedSearch(keyword, category, severity, status, page, size);
     }
 
-    // ✅ GET BY ID (KEEP THIS LAST ALWAYS)
+    // ✅ GET BY ID (KEEP LAST)
     @GetMapping("/{id}")
     public RiskEventResponse getById(@PathVariable Long id) {
         return service.getById(id);

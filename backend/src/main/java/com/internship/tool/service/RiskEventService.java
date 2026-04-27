@@ -5,10 +5,12 @@ import com.internship.tool.exception.ResourceNotFoundException;
 import com.internship.tool.repository.RiskEventRepository;
 import com.internship.tool.dto.RiskEventRequest;
 import com.internship.tool.dto.RiskEventResponse;
+import com.internship.tool.specification.RiskEventSpecification;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,47 +54,25 @@ public class RiskEventService {
                 .map(this::mapToResponse);
     }
 
-    // 🔹 SEARCH
-    public Page<RiskEventResponse> searchByTitle(String keyword, Pageable pageable) {
-        return repository.findByTitleContainingIgnoreCase(
-                        keyword == null ? "" : keyword,
-                        pageable)
-                .map(this::mapToResponse);
-    }
-
-    // 🔹 FILTERS (case-insensitive)
-    public Page<RiskEventResponse> getByCategory(String category, Pageable pageable) {
-        return repository.findByCategoryIgnoreCase(category, pageable)
-                .map(this::mapToResponse);
-    }
-
-    public Page<RiskEventResponse> getBySeverity(String severity, Pageable pageable) {
-        return repository.findBySeverityIgnoreCase(severity, pageable)
-                .map(this::mapToResponse);
-    }
-
-    public Page<RiskEventResponse> getByStatus(String status, Pageable pageable) {
-        return repository.findByStatusIgnoreCase(status, pageable)
-                .map(this::mapToResponse);
-    }
-
-    // 🔥 ADVANCED (SEARCH + FILTER + PAGINATION)
+    // 🔥 DAY 6 — SPECIFICATION BASED ADVANCED SEARCH
     public Page<RiskEventResponse> advancedSearch(
             String keyword,
             String category,
+            String severity,
+            String status,
             int page,
             int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<RiskEvent> result = repository
-                .findByTitleContainingIgnoreCaseAndCategoryContainingIgnoreCase(
-                        keyword == null ? "" : keyword,
-                        category == null ? "" : category,
-                        pageable
-                );
+        Specification<RiskEvent> spec = Specification
+                .where(RiskEventSpecification.hasKeyword(keyword))
+                .and(RiskEventSpecification.hasCategory(category))
+                .and(RiskEventSpecification.hasSeverity(severity))
+                .and(RiskEventSpecification.hasStatus(status));
 
-        return result.map(this::mapToResponse);
+        return repository.findAll(spec, pageable)
+                .map(this::mapToResponse);
     }
 
     // 🔹 GET BY ID
