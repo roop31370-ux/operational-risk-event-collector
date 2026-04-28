@@ -26,9 +26,23 @@ public class AuthService {
     // REGISTER
     public void register(AuthRequest request) {
 
+        // 🔐 Get role from request
+        String role = request.getRole();
+
+        // ✅ Default role = USER
+        if (role == null || role.isBlank()) {
+            role = "USER";
+        }
+
+        // ✅ Basic validation
+        if (!role.equals("USER") && !role.equals("ADMIN")) {
+            throw new RuntimeException("Invalid role");
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword())) // 🔐 ENCODE
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(role)
                 .build();
 
         userRepository.save(user);
@@ -45,7 +59,11 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        // 🔑 Include role in token
+        String token = jwtUtil.generateToken(
+                user.getUsername(),
+                user.getRole()
+        );
 
         return new AuthResponse(token);
     }

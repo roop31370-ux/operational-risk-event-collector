@@ -10,15 +10,16 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // ✅ Proper secure key (auto-generated 256-bit)
+    // ✅ Secure key
     private final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
 
-    // 🔐 Generate Token
-    public String generateToken(String username) {
+    // 🔐 Generate Token (with role)
+    public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY)
@@ -37,6 +38,11 @@ public class JwtUtil {
     // 🔍 Extract Username
     public String extractUsername(String token) {
         return extractClaims(token).getSubject();
+    }
+
+    // 🔍 Extract Role (NEW 🔥)
+    public String extractRole(String token) {
+        return extractClaims(token).get("role", String.class);
     }
 
     // 🔍 Check Expiry

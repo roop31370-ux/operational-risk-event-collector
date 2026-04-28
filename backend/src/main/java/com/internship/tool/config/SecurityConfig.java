@@ -19,7 +19,7 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
-    // 🔐 BCrypt Password Encoder (NEW)
+    // 🔐 BCrypt Password Encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ Disable CSRF (REST API)
+            // ❌ Disable CSRF
             .csrf(csrf -> csrf.disable())
 
             // 🔥 Stateless (JWT)
@@ -37,8 +37,10 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // 🔐 Authorization rules
+            // 🔐 Authorization rules (UPDATED 👇)
             .authorizeHttpRequests(auth -> auth
+
+                // PUBLIC
                 .requestMatchers(
                         "/api/auth/**",
                         "/h2-console/**",
@@ -46,10 +48,18 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html"
                 ).permitAll()
+
+                // 🔴 ADMIN ONLY
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // 🟡 USER + ADMIN
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+
+                // 🔐 EVERYTHING ELSE → LOGIN REQUIRED
                 .anyRequest().authenticated()
             )
 
-            // 🧱 Allow H2 console frames
+            // 🧱 H2 console fix
             .headers(headers ->
                 headers.frameOptions(frame -> frame.disable())
             )
@@ -58,7 +68,7 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable());
 
-        // 🔐 JWT filter (keep this outside chain for clarity)
+        // 🔐 JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
