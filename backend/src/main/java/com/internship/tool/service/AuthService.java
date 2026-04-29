@@ -8,8 +8,13 @@ import com.internship.tool.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
@@ -26,18 +31,18 @@ public class AuthService {
     // REGISTER
     public void register(AuthRequest request) {
 
-        // 🔐 Get role from request
-        String role = request.getRole();
+        log.info("Registering user: {}", request.getUsername());
 
-        // ✅ Default role = USER
-        if (role == null || role.isBlank()) {
-            role = "USER";
+        // ✅ Prevent duplicate users
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            log.error("User already exists: {}", request.getUsername());
+            throw new IllegalArgumentException("Username already exists");
         }
 
-        // ✅ Basic validation
-        if (!role.equals("USER") && !role.equals("ADMIN")) {
-            throw new RuntimeException("Invalid role");
-        }
+        // 🔐 Safe role assignment
+        String role = (request.getRole() != null && request.getRole().equals("ADMIN"))
+                ? "ADMIN"
+                : "USER";
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -46,24 +51,29 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+
+        log.info("User registered successfully: {}", request.getUsername());
     }
 
     // LOGIN
     public AuthResponse login(AuthRequest request) {
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        log.info("Login attempt for user: {}", request.getUsername());
 
-        // 🔐 MATCH PASSWORD
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> {
+                    log.error("User not found: {}", request.getUsername());
+                    return new IllegalArgumentException("User not found");
+                });
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            log.error("Invalid password for user: {}", request.getUsername());
+            throw new IllegalArgumentException("Invalid password");
         }
 
-        // 🔑 Include role in token
-        String token = jwtUtil.generateToken(
-                user.getUsername(),
-                user.getRole()
-        );
+        log.info("Login successful for user: {}", request.getUsername());
+
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
         return new AuthResponse(token);
     }

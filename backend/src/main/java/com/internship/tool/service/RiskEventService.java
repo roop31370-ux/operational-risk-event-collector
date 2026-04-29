@@ -8,7 +8,6 @@ import com.internship.tool.dto.RiskEventResponse;
 import com.internship.tool.specification.RiskEventSpecification;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -54,16 +53,14 @@ public class RiskEventService {
                 .map(this::mapToResponse);
     }
 
-    // 🔥 DAY 6 — SPECIFICATION BASED ADVANCED SEARCH
+    // 🔥 UPDATED — ADVANCED SEARCH WITH PAGINATION
     public Page<RiskEventResponse> advancedSearch(
             String keyword,
             String category,
             String severity,
             String status,
-            int page,
-            int size
+            Pageable pageable
     ) {
-        Pageable pageable = PageRequest.of(page, size);
 
         Specification<RiskEvent> spec = Specification
                 .where(RiskEventSpecification.hasKeyword(keyword))

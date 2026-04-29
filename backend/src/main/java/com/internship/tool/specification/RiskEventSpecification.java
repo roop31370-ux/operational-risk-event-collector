@@ -5,39 +5,38 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class RiskEventSpecification {
 
-    // 🔍 keyword search
+    // 🔍 Keyword search (title + description)
     public static Specification<RiskEvent> hasKeyword(String keyword) {
-        return (root, query, cb) ->
-                keyword == null || keyword.isEmpty()
-                        ? null
-                        : cb.like(cb.lower(root.get("title")),
-                                  "%" + keyword.toLowerCase() + "%");
+        return (root, query, cb) -> {
+            if (keyword == null || keyword.isBlank()) return null;
+
+            String like = "%" + keyword.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), like),
+                    cb.like(cb.lower(root.get("description")), like)
+            );
+        };
     }
 
-    // 🔎 category filter
+    // 📂 Category filter
     public static Specification<RiskEvent> hasCategory(String category) {
         return (root, query, cb) ->
-                category == null || category.isEmpty()
-                        ? null
-                        : cb.equal(cb.lower(root.get("category")),
-                                   category.toLowerCase());
+                (category == null || category.isBlank()) ? null :
+                        cb.equal(root.get("category"), category);
     }
 
-    // 🔥 severity filter
+    // ⚠️ Severity filter
     public static Specification<RiskEvent> hasSeverity(String severity) {
         return (root, query, cb) ->
-                severity == null || severity.isEmpty()
-                        ? null
-                        : cb.equal(cb.lower(root.get("severity")),
-                                   severity.toLowerCase());
+                (severity == null || severity.isBlank()) ? null :
+                        cb.equal(root.get("severity"), severity);
     }
 
-    // 📌 status filter
+    // 📊 Status filter
     public static Specification<RiskEvent> hasStatus(String status) {
         return (root, query, cb) ->
-                status == null || status.isEmpty()
-                        ? null
-                        : cb.equal(cb.lower(root.get("status")),
-                                   status.toLowerCase());
+                (status == null || status.isBlank()) ? null :
+                        cb.equal(root.get("status"), status);
     }
 }
