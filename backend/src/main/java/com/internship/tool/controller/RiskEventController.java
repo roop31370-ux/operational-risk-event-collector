@@ -66,21 +66,20 @@ public class RiskEventController {
         );
     }
 
-    // 🔥 ADVANCED (Specification API)
+    // 🔥 UPDATED — ADVANCED SEARCH
     @GetMapping("/advanced")
     public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> advanced(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String severity,
             @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            Pageable pageable
     ) {
         return ResponseEntity.ok(
                 ApiResponse.<Page<RiskEventResponse>>builder()
                         .success(true)
                         .message("Fetched filtered risk events")
-                        .data(service.advancedSearch(keyword, category, severity, status, page, size))
+                        .data(service.advancedSearch(keyword, category, severity, status, pageable))
                         .build()
         );
     }

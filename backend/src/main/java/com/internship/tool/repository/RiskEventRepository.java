@@ -4,9 +4,9 @@ import com.internship.tool.entity.RiskEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface RiskEventRepository extends
-        JpaRepository<RiskEvent, Long>,
-        JpaSpecificationExecutor<RiskEvent> {
+public interface RiskEventRepository
+        extends JpaRepository<RiskEvent, Long>,
+                JpaSpecificationExecutor<RiskEvent> {
 
-    // 🔥 No need for custom filter/search methods anymore
+    // No custom methods needed
 }

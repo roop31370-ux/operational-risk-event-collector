@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 🔴 Illegal Argument / Bad Request (400)
+    // 🔴 Illegal Argument (400)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(
             IllegalArgumentException ex) {
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 🔴 Unauthorized (401) – useful for JWT errors
+    // 🔴 Unauthorized (401)
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleUnauthorized(
             SecurityException ex) {
@@ -70,10 +70,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
 
-        ex.printStackTrace(); // 🔥 keep for debugging
-
+        // ❌ Avoid exposing internal details
         return new ResponseEntity<>(
-                buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()),
+                buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"),
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }

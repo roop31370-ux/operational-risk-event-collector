@@ -27,9 +27,9 @@ public class RiskEvent {
 
     private String category;
 
-    private String severity;
+    private String severity; // LOW, MEDIUM, HIGH
 
-    private String status;
+    private String status;   // OPEN, CLOSED, IN_PROGRESS
 
     @Column(name = "ai_description", length = 2000)
     private String aiDescription;
@@ -37,6 +37,7 @@ public class RiskEvent {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // ✅ Set timestamps automatically
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -45,6 +46,6 @@ public class RiskEvent {
 
     @PreUpdate
     public void onUpdate() {
-         this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }
