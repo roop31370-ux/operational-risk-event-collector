@@ -18,9 +18,11 @@ import java.util.List;
 public class RiskEventService {
 
     private final RiskEventRepository repository;
+    private final AiService aiService;
 
-    public RiskEventService(RiskEventRepository repository) {
+    public RiskEventService(RiskEventRepository repository, AiService aiService) {
         this.repository = repository;
+        this.aiService = aiService;
     }
 
     // 🔹 CREATE
@@ -33,6 +35,13 @@ public class RiskEventService {
         event.setCategory(request.getCategory());
         event.setSeverity(request.getSeverity());
         event.setStatus(request.getStatus());
+
+        // 🔥 AI Integration
+        String aiDesc = aiService.generateRiskDescription(
+                request.getTitle(),
+                request.getDescription()
+        );
+        event.setAiDescription(aiDesc);
 
         RiskEvent saved = repository.save(event);
 
@@ -53,7 +62,7 @@ public class RiskEventService {
                 .map(this::mapToResponse);
     }
 
-    // 🔥 UPDATED — ADVANCED SEARCH WITH PAGINATION
+    // 🔥 ADVANCED SEARCH
     public Page<RiskEventResponse> advancedSearch(
             String keyword,
             String category,
@@ -76,9 +85,9 @@ public class RiskEventService {
     public RiskEventResponse getById(Long id) {
 
         RiskEvent event = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "RiskEvent not found with id: " + id
-                ));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
+                );
 
         return mapToResponse(event);
     }
@@ -87,15 +96,22 @@ public class RiskEventService {
     public RiskEventResponse updateRiskEvent(Long id, RiskEventRequest request) {
 
         RiskEvent event = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "RiskEvent not found with id: " + id
-                ));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
+                );
 
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
         event.setCategory(request.getCategory());
         event.setSeverity(request.getSeverity());
         event.setStatus(request.getStatus());
+
+        // 🔥 Update AI
+        String aiDesc = aiService.generateRiskDescription(
+                request.getTitle(),
+                request.getDescription()
+        );
+        event.setAiDescription(aiDesc);
 
         RiskEvent updated = repository.save(event);
 
@@ -106,9 +122,9 @@ public class RiskEventService {
     public void deleteRiskEvent(Long id) {
 
         RiskEvent event = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "RiskEvent not found with id: " + id
-                ));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
+                );
 
         repository.delete(event);
     }
@@ -122,6 +138,7 @@ public class RiskEventService {
                 .category(event.getCategory())
                 .severity(event.getSeverity())
                 .status(event.getStatus())
+                .aiDescription(event.getAiDescription())
                 .createdAt(event.getCreatedAt())
                 .updatedAt(event.getUpdatedAt())
                 .build();
