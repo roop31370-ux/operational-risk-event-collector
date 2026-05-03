@@ -7,6 +7,7 @@ import com.internship.tool.dto.RiskEventFilterRequest;
 import com.internship.tool.service.RiskEventService;
 
 import jakarta.validation.Valid;
+
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Swagger imports (ONLY THESE)
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/risk-events")
+@Tag(name = "Risk Events", description = "APIs for managing risk events")
+@SecurityRequirement(name = "bearerAuth")
 public class RiskEventController {
 
     private final RiskEventService service;
@@ -25,6 +33,11 @@ public class RiskEventController {
     }
 
     // ✅ CREATE
+    @Operation(summary = "Create risk event", description = "Create a new risk event (ADMIN only)")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "201",
+            description = "RiskEvent created successfully"
+    )
     @PostMapping
     public ResponseEntity<ApiResponse<RiskEventResponse>> create(
             @Valid @RequestBody RiskEventRequest request) {
@@ -41,6 +54,11 @@ public class RiskEventController {
     }
 
     // ✅ GET ALL
+    @Operation(summary = "Get all risk events", description = "Fetch all risk events")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Fetched successfully"
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<List<RiskEventResponse>>> getAll() {
 
@@ -54,6 +72,7 @@ public class RiskEventController {
     }
 
     // 🔥 PAGINATION + SORT
+    @Operation(summary = "Get paginated risk events", description = "Fetch risk events with pagination and sorting")
     @GetMapping("/paged")
     public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -81,7 +100,8 @@ public class RiskEventController {
         );
     }
 
-    // 🔥 DAY 14 — CLEAN SEARCH API (DTO BASED)
+    // 🔥 SEARCH
+    @Operation(summary = "Search risk events", description = "Filter risk events using multiple criteria")
     @PostMapping("/search")
     public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> search(
             @RequestBody RiskEventFilterRequest filter,
@@ -111,6 +131,7 @@ public class RiskEventController {
     }
 
     // ✅ GET BY ID
+    @Operation(summary = "Get risk event by ID", description = "Fetch a specific risk event")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RiskEventResponse>> getById(@PathVariable Long id) {
 
@@ -124,6 +145,7 @@ public class RiskEventController {
     }
 
     // ✅ UPDATE
+    @Operation(summary = "Update risk event", description = "Update an existing risk event (ADMIN only)")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<RiskEventResponse>> update(
             @PathVariable Long id,
@@ -141,6 +163,7 @@ public class RiskEventController {
     }
 
     // ✅ DELETE
+    @Operation(summary = "Delete risk event", description = "Delete a risk event (ADMIN only)")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id) {
 
