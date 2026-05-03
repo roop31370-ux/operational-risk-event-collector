@@ -13,10 +13,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 @Service
 public class RiskEventService {
+
+    private static final Logger log = LoggerFactory.getLogger(RiskEventService.class);
 
     private final RiskEventRepository repository;
     private final AiService aiService;
@@ -29,14 +34,25 @@ public class RiskEventService {
     // 🔹 CREATE
     public RiskEventResponse createRiskEvent(RiskEventRequest request) {
 
+        log.info("Creating RiskEvent with title: {}", request.getTitle());
+
+        long start = System.currentTimeMillis();
+
         RiskEvent event = buildEntityFromRequest(new RiskEvent(), request);
         setAiDescriptionSafely(event, request);
 
-        return mapToResponse(repository.save(event));
+        RiskEvent saved = repository.save(event);
+
+        log.info("RiskEvent created successfully with ID: {}", saved.getId());
+        log.debug("Create execution time: {} ms", System.currentTimeMillis() - start);
+
+        return mapToResponse(saved);
     }
 
     // 🔹 GET ALL
     public List<RiskEventResponse> getAllRiskEvents() {
+        log.info("Fetching all risk events");
+
         return repository.findAll()
                 .stream()
                 .map(this::mapToResponse)
@@ -45,15 +61,20 @@ public class RiskEventService {
 
     // 🔹 GET ALL WITH PAGINATION
     public Page<RiskEventResponse> getAllWithPagination(Pageable pageable) {
+        log.info("Fetching paginated risk events: page={}, size={}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
         return repository.findAll(pageable)
                 .map(this::mapToResponse);
     }
 
-    // 🔥 DAY 14 — DTO BASED SEARCH
+    // 🔥 SEARCH (DTO BASED)
     public Page<RiskEventResponse> search(
             RiskEventFilterRequest filter,
             Pageable pageable
     ) {
+
+        log.info("Searching RiskEvents with filter: {}", filter);
 
         Specification<RiskEvent> spec = Specification
                 .where(RiskEventSpecification.hasKeyword(filter.getKeyword()))
@@ -67,23 +88,36 @@ public class RiskEventService {
 
     // 🔹 GET BY ID
     public RiskEventResponse getById(Long id) {
+        log.info("Fetching RiskEvent by ID: {}", id);
+
         return mapToResponse(getEntityOrThrow(id));
     }
 
     // 🔹 UPDATE
     public RiskEventResponse updateRiskEvent(Long id, RiskEventRequest request) {
 
+        log.info("Updating RiskEvent ID: {}", id);
+
         RiskEvent event = getEntityOrThrow(id);
 
         buildEntityFromRequest(event, request);
         setAiDescriptionSafely(event, request);
 
-        return mapToResponse(repository.save(event));
+        RiskEvent updated = repository.save(event);
+
+        log.info("RiskEvent updated successfully with ID: {}", id);
+
+        return mapToResponse(updated);
     }
 
     // 🔹 DELETE
     public void deleteRiskEvent(Long id) {
+
+        log.warn("Deleting RiskEvent ID: {}", id);
+
         repository.delete(getEntityOrThrow(id));
+
+        log.warn("RiskEvent deleted successfully with ID: {}", id);
     }
 
     // ===============================
@@ -92,9 +126,10 @@ public class RiskEventService {
 
     private RiskEvent getEntityOrThrow(Long id) {
         return repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
-                );
+                .orElseThrow(() -> {
+                    log.error("RiskEvent not found with ID: {}", id);
+                    return new ResourceNotFoundException("RiskEvent not found with id: " + id);
+                });
     }
 
     private RiskEvent buildEntityFromRequest(RiskEvent event, RiskEventRequest request) {
@@ -114,6 +149,7 @@ public class RiskEventService {
             );
             event.setAiDescription(aiDesc);
         } catch (Exception e) {
+            log.error("AI service failed for title: {}", request.getTitle(), e);
             event.setAiDescription("AI service unavailable");
         }
     }
