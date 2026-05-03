@@ -5,6 +5,7 @@ import com.internship.tool.exception.ResourceNotFoundException;
 import com.internship.tool.repository.RiskEventRepository;
 import com.internship.tool.dto.RiskEventRequest;
 import com.internship.tool.dto.RiskEventResponse;
+import com.internship.tool.dto.RiskEventFilterRequest;
 import com.internship.tool.specification.RiskEventSpecification;
 
 import org.springframework.data.domain.Page;
@@ -29,7 +30,6 @@ public class RiskEventService {
     public RiskEventResponse createRiskEvent(RiskEventRequest request) {
 
         RiskEvent event = buildEntityFromRequest(new RiskEvent(), request);
-
         setAiDescriptionSafely(event, request);
 
         return mapToResponse(repository.save(event));
@@ -49,20 +49,17 @@ public class RiskEventService {
                 .map(this::mapToResponse);
     }
 
-    // 🔥 ADVANCED SEARCH
-    public Page<RiskEventResponse> advancedSearch(
-            String keyword,
-            String category,
-            String severity,
-            String status,
+    // 🔥 DAY 14 — DTO BASED SEARCH
+    public Page<RiskEventResponse> search(
+            RiskEventFilterRequest filter,
             Pageable pageable
     ) {
 
         Specification<RiskEvent> spec = Specification
-                .where(RiskEventSpecification.hasKeyword(keyword))
-                .and(RiskEventSpecification.hasCategory(category))
-                .and(RiskEventSpecification.hasSeverity(severity))
-                .and(RiskEventSpecification.hasStatus(status));
+                .where(RiskEventSpecification.hasKeyword(filter.getKeyword()))
+                .and(RiskEventSpecification.hasCategory(filter.getCategory()))
+                .and(RiskEventSpecification.hasSeverity(filter.getSeverity()))
+                .and(RiskEventSpecification.hasStatus(filter.getStatus()));
 
         return repository.findAll(spec, pageable)
                 .map(this::mapToResponse);
@@ -79,7 +76,6 @@ public class RiskEventService {
         RiskEvent event = getEntityOrThrow(id);
 
         buildEntityFromRequest(event, request);
-
         setAiDescriptionSafely(event, request);
 
         return mapToResponse(repository.save(event));
@@ -91,7 +87,7 @@ public class RiskEventService {
     }
 
     // ===============================
-    // 🔧 PRIVATE HELPERS (CLEAN CODE)
+    // 🔧 PRIVATE HELPERS
     // ===============================
 
     private RiskEvent getEntityOrThrow(Long id) {
@@ -110,7 +106,6 @@ public class RiskEventService {
         return event;
     }
 
-    // 🔥 SAFE AI CALL (important for real apps)
     private void setAiDescriptionSafely(RiskEvent event, RiskEventRequest request) {
         try {
             String aiDesc = aiService.generateRiskDescription(

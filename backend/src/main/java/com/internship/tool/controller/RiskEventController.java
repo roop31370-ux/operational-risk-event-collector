@@ -3,6 +3,7 @@ package com.internship.tool.controller;
 import com.internship.tool.dto.ApiResponse;
 import com.internship.tool.dto.RiskEventRequest;
 import com.internship.tool.dto.RiskEventResponse;
+import com.internship.tool.dto.RiskEventFilterRequest;
 import com.internship.tool.service.RiskEventService;
 
 import jakarta.validation.Valid;
@@ -52,7 +53,7 @@ public class RiskEventController {
         );
     }
 
-    // 🔥 PAGINATION + SORT (Swagger Friendly)
+    // 🔥 PAGINATION + SORT
     @GetMapping("/paged")
     public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> getAllPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -80,13 +81,10 @@ public class RiskEventController {
         );
     }
 
-    // 🔥 ADVANCED SEARCH + SORT
-    @GetMapping("/advanced")
-    public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> advanced(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String severity,
-            @RequestParam(required = false) String status,
+    // 🔥 DAY 14 — CLEAN SEARCH API (DTO BASED)
+    @PostMapping("/search")
+    public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> search(
+            @RequestBody RiskEventFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "createdAt,desc") String sort
@@ -107,7 +105,7 @@ public class RiskEventController {
                 ApiResponse.<Page<RiskEventResponse>>builder()
                         .success(true)
                         .message("Fetched filtered & sorted risk events")
-                        .data(service.advancedSearch(keyword, category, severity, status, pageable))
+                        .data(service.search(filter, pageable))
                         .build()
         );
     }
