@@ -6,8 +6,7 @@ import com.internship.tool.dto.RiskEventResponse;
 import com.internship.tool.service.RiskEventService;
 
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,32 +52,61 @@ public class RiskEventController {
         );
     }
 
-    // 🔥 PAGINATION
+    // 🔥 PAGINATION + SORT (Swagger Friendly)
     @GetMapping("/paged")
-    public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> getAllPaged(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> getAllPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort
+    ) {
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(direction, sortParams[0])
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.<Page<RiskEventResponse>>builder()
                         .success(true)
-                        .message("Fetched paginated risk events")
+                        .message("Fetched paginated & sorted risk events")
                         .data(service.getAllWithPagination(pageable))
                         .build()
         );
     }
 
-    // 🔥 UPDATED — ADVANCED SEARCH
+    // 🔥 ADVANCED SEARCH + SORT
     @GetMapping("/advanced")
     public ResponseEntity<ApiResponse<Page<RiskEventResponse>>> advanced(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String severity,
             @RequestParam(required = false) String status,
-            Pageable pageable
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort
     ) {
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(direction, sortParams[0])
+        );
+
         return ResponseEntity.ok(
                 ApiResponse.<Page<RiskEventResponse>>builder()
                         .success(true)
-                        .message("Fetched filtered risk events")
+                        .message("Fetched filtered & sorted risk events")
                         .data(service.advancedSearch(keyword, category, severity, status, pageable))
                         .build()
         );

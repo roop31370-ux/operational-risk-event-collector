@@ -28,24 +28,11 @@ public class RiskEventService {
     // 🔹 CREATE
     public RiskEventResponse createRiskEvent(RiskEventRequest request) {
 
-        RiskEvent event = new RiskEvent();
+        RiskEvent event = buildEntityFromRequest(new RiskEvent(), request);
 
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setCategory(request.getCategory());
-        event.setSeverity(request.getSeverity());
-        event.setStatus(request.getStatus());
+        setAiDescriptionSafely(event, request);
 
-        // 🔥 AI Integration
-        String aiDesc = aiService.generateRiskDescription(
-                request.getTitle(),
-                request.getDescription()
-        );
-        event.setAiDescription(aiDesc);
-
-        RiskEvent saved = repository.save(event);
-
-        return mapToResponse(saved);
+        return mapToResponse(repository.save(event));
     }
 
     // 🔹 GET ALL
@@ -83,53 +70,59 @@ public class RiskEventService {
 
     // 🔹 GET BY ID
     public RiskEventResponse getById(Long id) {
-
-        RiskEvent event = repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
-                );
-
-        return mapToResponse(event);
+        return mapToResponse(getEntityOrThrow(id));
     }
 
     // 🔹 UPDATE
     public RiskEventResponse updateRiskEvent(Long id, RiskEventRequest request) {
 
-        RiskEvent event = repository.findById(id)
+        RiskEvent event = getEntityOrThrow(id);
+
+        buildEntityFromRequest(event, request);
+
+        setAiDescriptionSafely(event, request);
+
+        return mapToResponse(repository.save(event));
+    }
+
+    // 🔹 DELETE
+    public void deleteRiskEvent(Long id) {
+        repository.delete(getEntityOrThrow(id));
+    }
+
+    // ===============================
+    // 🔧 PRIVATE HELPERS (CLEAN CODE)
+    // ===============================
+
+    private RiskEvent getEntityOrThrow(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("RiskEvent not found with id: " + id)
                 );
+    }
 
+    private RiskEvent buildEntityFromRequest(RiskEvent event, RiskEventRequest request) {
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
         event.setCategory(request.getCategory());
         event.setSeverity(request.getSeverity());
         event.setStatus(request.getStatus());
-
-        // 🔥 Update AI
-        String aiDesc = aiService.generateRiskDescription(
-                request.getTitle(),
-                request.getDescription()
-        );
-        event.setAiDescription(aiDesc);
-
-        RiskEvent updated = repository.save(event);
-
-        return mapToResponse(updated);
+        return event;
     }
 
-    // 🔹 DELETE
-    public void deleteRiskEvent(Long id) {
-
-        RiskEvent event = repository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("RiskEvent not found with id: " + id)
-                );
-
-        repository.delete(event);
+    // 🔥 SAFE AI CALL (important for real apps)
+    private void setAiDescriptionSafely(RiskEvent event, RiskEventRequest request) {
+        try {
+            String aiDesc = aiService.generateRiskDescription(
+                    request.getTitle(),
+                    request.getDescription()
+            );
+            event.setAiDescription(aiDesc);
+        } catch (Exception e) {
+            event.setAiDescription("AI service unavailable");
+        }
     }
 
-    // 🔹 MAPPING
     private RiskEventResponse mapToResponse(RiskEvent event) {
         return RiskEventResponse.builder()
                 .id(event.getId())
