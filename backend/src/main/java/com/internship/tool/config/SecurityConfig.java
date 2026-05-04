@@ -3,6 +3,7 @@ package com.internship.tool.config;
 import com.internship.tool.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,7 +20,6 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
-    // 🔐 BCrypt Password Encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ Disable CSRF
+            // ❌ Disable CSRF for REST
             .csrf(csrf -> csrf.disable())
 
             // 🔥 Stateless (JWT)
@@ -37,10 +37,10 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // 🔐 Authorization rules (UPDATED 👇)
+            // 🔐 Authorization rules
             .authorizeHttpRequests(auth -> auth
 
-                // PUBLIC
+                // 🌐 PUBLIC (no token required)
                 .requestMatchers(
                         "/api/auth/**",
                         "/h2-console/**",
@@ -49,13 +49,27 @@ public class SecurityConfig {
                         "/swagger-ui.html"
                 ).permitAll()
 
-                // 🔴 ADMIN ONLY
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // 🟢 READ APIs → USER + ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/risk-events/**")
+                .hasAnyRole("USER", "ADMIN")
 
-                // 🟡 USER + ADMIN
-                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                // 🔴 CREATE → ADMIN ONLY
+                .requestMatchers(HttpMethod.POST, "/api/risk-events")
+                .hasRole("ADMIN")
 
-                // 🔐 EVERYTHING ELSE → LOGIN REQUIRED
+                // 🔴 SEARCH → USER + ADMIN (POST /search)
+                .requestMatchers(HttpMethod.POST, "/api/risk-events/search")
+                .hasAnyRole("USER", "ADMIN")
+
+                // 🔴 UPDATE → ADMIN ONLY
+                .requestMatchers(HttpMethod.PUT, "/api/risk-events/**")
+                .hasRole("ADMIN")
+
+                // 🔴 DELETE → ADMIN ONLY
+                .requestMatchers(HttpMethod.DELETE, "/api/risk-events/**")
+                .hasRole("ADMIN")
+
+                // 🔐 everything else requires auth
                 .anyRequest().authenticated()
             )
 

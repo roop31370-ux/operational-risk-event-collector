@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
@@ -21,3 +21,8 @@ spring:
 jwt:
   secret: testsecret
   expiration: 3600000
+
+logging:
+  level:
+    root: INFO
+    com.internship.tool: DEBUG
