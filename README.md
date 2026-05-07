@@ -23,7 +23,7 @@ A full-stack application for collecting, managing, and analyzing operational ris
 3. Access the application:
    - Frontend: `http://localhost:5173`
    - Backend Swagger UI: `http://localhost:8080/swagger-ui.html`
-   - AI Service: `http://localhost:5000`
+   - AI Service: `http://127.0.0.1:5000/'
 
 ## Features
 
